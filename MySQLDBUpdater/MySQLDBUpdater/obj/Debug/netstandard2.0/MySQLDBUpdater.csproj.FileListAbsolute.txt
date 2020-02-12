@@ -1,0 +1,5 @@
+\\Mac\Home\Entwicklung\WoW\ef-database-updater\MySQLDBUpdater\MySQLDBUpdater\bin\Debug\netstandard2.0\MySQLDBUpdater.deps.json
+\\Mac\Home\Entwicklung\WoW\ef-database-updater\MySQLDBUpdater\MySQLDBUpdater\bin\Debug\netstandard2.0\MySQLDBUpdater.dll
+\\Mac\Home\Entwicklung\WoW\ef-database-updater\MySQLDBUpdater\MySQLDBUpdater\obj\Debug\netstandard2.0\MySQLDBUpdater.csprojAssemblyReference.cache
+\\Mac\Home\Entwicklung\WoW\ef-database-updater\MySQLDBUpdater\MySQLDBUpdater\obj\Debug\netstandard2.0\MySQLDBUpdater.AssemblyInfoInputs.cache
+\\Mac\Home\Entwicklung\WoW\ef-database-updater\MySQLDBUpdater\MySQLDBUpdater\obj\Debug\netstandard2.0\MySQLDBUpdater.AssemblyInfo.cs
