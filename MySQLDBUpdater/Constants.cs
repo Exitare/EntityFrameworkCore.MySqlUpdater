@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MySQLDBUpdater
 {
-    public enum SQLStatusCodes
+    public enum UpdateStatusCodes
     {
         NO_MATCHING_PATH = 0x00,
         ERROR_EXECUTING_SQL = 0x10,

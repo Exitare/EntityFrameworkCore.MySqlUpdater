@@ -13,18 +13,18 @@ namespace TestProject
 
             DatabaseContext db = new DatabaseContext(null!);
             MySQLDBUpdater.MySQLDBUpdater updater = new MySQLDBUpdater.MySQLDBUpdater(db, new List<string>());
-            db.ApplyUpdates();
+            // db.ApplyUpdates();
 
         }
 
-       
+
 
 
     }
 
     public class DatabaseContext : DbContext
     {
-      
+
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {
@@ -33,3 +33,4 @@ namespace TestProject
 
 
     }
+}
