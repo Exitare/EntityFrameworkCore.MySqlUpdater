@@ -9,10 +9,10 @@ namespace MySQLDBUpdater
 {
     public partial class MySQLDBUpdater
     {
-        DbContext Context { get; }
+        MyDbContext Context { get; }
         List<string> Folders { get; set; }
 
-        public MySQLDBUpdater(DbContext context, List<string> folders)
+        public MySQLDBUpdater(MyDbContext context, List<string> folders)
         {
             Context = context;
             Folders = folders;
