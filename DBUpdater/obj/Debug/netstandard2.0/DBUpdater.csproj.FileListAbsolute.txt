@@ -1,8 +1,0 @@
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\bin\Debug\netstandard2.0\DBUpdater.deps.json
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\bin\Debug\netstandard2.0\DBUpdater.dll
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\bin\Debug\netstandard2.0\DBUpdater.pdb
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\obj\Debug\netstandard2.0\DBUpdater.csprojAssemblyReference.cache
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\obj\Debug\netstandard2.0\DBUpdater.AssemblyInfoInputs.cache
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\obj\Debug\netstandard2.0\DBUpdater.AssemblyInfo.cs
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\obj\Debug\netstandard2.0\DBUpdater.dll
-\\Mac\Home\Entwicklung\WoW\utilityserver\DBUpdater\obj\Debug\netstandard2.0\DBUpdater.pdb
