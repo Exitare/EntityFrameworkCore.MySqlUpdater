@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Exitare</Authors>
+    <Company>Exitare</Company>
+    <Description>DBUpdater for Entity Framework Core. 
+Use this updater to update your database with your latest sql files by providing all folders you want to apply.</Description>
+    <PackageTags>MySQL, Updater, Automatic</PackageTags>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>

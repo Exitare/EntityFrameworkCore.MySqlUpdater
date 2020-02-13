@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MySQLDBUpdater
 {
-    public class MySQLDBUpdater
+    public partial class MySQLDBUpdater
     {
         DbContext Context { get; }
         List<string> Folders { get; set; }
@@ -28,12 +28,21 @@ namespace MySQLDBUpdater
                     foreach (string file in Directory.EnumerateFiles(folder, "*.sql").OrderBy(filename => filename))
                     {
                         string content = File.ReadAllText(file);
-                        string fileHash = HashSum.CreateSHA1Hash(content);
+                        string hashSum = HashSum.CreateSHA1Hash(content);
 
                         if (string.IsNullOrEmpty(content))
                             continue;
+                        SHAStatus shaStatus = await UpdateAlreadyApplied(file, hashSum);
+                        if(shaStatus == SHAStatus.NOT_APPLIED)
+                        {
 
-                        if(!await UpdateAlreadyApplied(file))
+                        } else if(shaStatus == SHAStatus.EQUALS)
+                        {
+
+                        } else
+                        {
+
+                        }
                     }
 
                 } catch (Exception ex)
@@ -92,56 +101,6 @@ namespace MySQLDBUpdater
             }
         }
 
-       
-
-
-        /// <summary>
-        /// Returns the occurence of a given word in a given content string
-        /// </summary>
-        /// <param name="content"></param>
-        /// <param name="searchTerm"></param>
-        /// <returns></returns>
-        private int GetWordOccurence(string content, string searchTerm)
-        {
-            string[] source = content.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries);
-
-            // Create the query.  Use ToLowerInvariant to match "data" and "Data"   
-            var matchQuery = from word in source
-                             where word.ToLowerInvariant() == searchTerm.ToLowerInvariant()
-                             select word;
-
-            return matchQuery.Count();
-        }
-
-
-        /// <summary>
-        /// Validates the sql content.
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        private bool ValidateContent(string content, uint occurenceCount = 10)
-        {
-            if (content.ToUpper().Contains("DROP * "))
-                return false;
-
-            if (content.ToUpper().Contains("DELETE * "))
-                return false;
-
-            if (content.ToUpper().Contains("TRUNCATE"))
-                return false;
-
-
-            if (GetWordOccurence(content, "delete") >= occurenceCount)
-                return false;
-
-            if (GetWordOccurence(content, "DROP *") >= occurenceCount)
-                return false;
-
-
-            return true;
-        }
-
-
         /// <summary>
         /// Fallback method if ef core one fails
         /// </summary>
@@ -164,36 +123,6 @@ namespace MySQLDBUpdater
                 return SQLStatusCodes.ERROR_EXECUTING_SQL;
             }
         }
-
-        /// <summary>
-        /// Checks if the update is already applied to the db
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        private async Task<SHAStatus> UpdateAlreadyApplied(string filename, string hashsum)
-        {
-
-            string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
-            var conn = Context.Database.GetDbConnection();
-            await conn.OpenAsync();
-            var command = conn.CreateCommand();
-            command.CommandText = query;
-            var reader = await command.ExecuteReaderAsync();
-            Console.WriteLine(reader.HasRows);
-            if (!reader.HasRows)
-                return SHAStatus.NOT_APPLIED;
-
-            while (reader.Read())
-            {
-                if (hashsum == reader.GetString(0))
-                    return SHAStatus.EQUALS;
-
-                return SHAStatus.CHANGED;
-            }
-
-            return SHAStatus.NOT_APPLIED;
-        }
-
 
     }
 }
