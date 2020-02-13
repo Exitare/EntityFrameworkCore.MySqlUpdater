@@ -15,4 +15,11 @@ namespace MySQLDBUpdater
         UPDATE_ALREADY_APPLIED = 0x60,
     }
 
+    public enum SHAStatus
+    {
+        NOT_APPLIED = 0,
+        EQUALS,
+        CHANGED,
+    }
+
 }

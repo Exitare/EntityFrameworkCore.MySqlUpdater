@@ -5680,19 +5680,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\raphael\\.nuget\\packages\\": {}
+    "C:\\Users\\rapha\\.nuget\\packages\\": {},
+    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "\\\\Mac\\Home\\Entwicklung\\WoW\\ef-database-updater\\MySQLDBUpdater\\MySQLDBUpdater\\MySQLDBUpdater.csproj",
+      "projectUniqueName": "D:\\Projekte\\WoW\\Infrastructure\\ef-database-updater\\MySQLDBUpdater\\MySQLDBUpdater.csproj",
       "projectName": "MySQLDBUpdater",
-      "projectPath": "\\\\Mac\\Home\\Entwicklung\\WoW\\ef-database-updater\\MySQLDBUpdater\\MySQLDBUpdater\\MySQLDBUpdater.csproj",
-      "packagesPath": "C:\\Users\\raphael\\.nuget\\packages\\",
-      "outputPath": "\\\\Mac\\Home\\Entwicklung\\WoW\\ef-database-updater\\MySQLDBUpdater\\MySQLDBUpdater\\obj\\",
+      "projectPath": "D:\\Projekte\\WoW\\Infrastructure\\ef-database-updater\\MySQLDBUpdater\\MySQLDBUpdater.csproj",
+      "packagesPath": "C:\\Users\\rapha\\.nuget\\packages\\",
+      "outputPath": "D:\\Projekte\\WoW\\Infrastructure\\ef-database-updater\\MySQLDBUpdater\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+      ],
       "configFilePaths": [
-        "C:\\Users\\raphael\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\rapha\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

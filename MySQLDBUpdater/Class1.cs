@@ -170,17 +170,28 @@ namespace MySQLDBUpdater
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        private async Task<bool> UpdateAlreadyApplied(string filename)
+        private async Task<SHAStatus> UpdateAlreadyApplied(string filename, string hashsum)
         {
 
-            string query = $"SELECT name, hash  FROM updates WHERE name = '{filename}';";
+            string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
             var conn = Context.Database.GetDbConnection();
             await conn.OpenAsync();
             var command = conn.CreateCommand();
             command.CommandText = query;
             var reader = await command.ExecuteReaderAsync();
             Console.WriteLine(reader.HasRows);
-            return (reader.HasRows) ? true : false;
+            if (!reader.HasRows)
+                return SHAStatus.NOT_APPLIED;
+
+            while (reader.Read())
+            {
+                if (hashsum == reader.GetString(0))
+                    return SHAStatus.EQUALS;
+
+                return SHAStatus.CHANGED;
+            }
+
+            return SHAStatus.NOT_APPLIED;
         }
 
 
