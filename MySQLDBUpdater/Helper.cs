@@ -50,6 +50,11 @@ namespace EntityFrameworkCore.MySqlUpdater
             return (reader.HasRows) ? true : false;
         }
 
+        /// <summary>
+        /// Creates the 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public static async Task<bool> CreateUpdateTable(DbContext context)
         {
             string query = $"SHOW tables LIKE 'updates';";

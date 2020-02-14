@@ -19,6 +19,10 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public static async Task<bool> UpdateDB(DbContext context, List<string> folders, bool createUpdateTable = false)
         {
+
+            if(createUpdateTable)
+
+
             foreach (string folder in folders)
             {
                 if (!Directory.Exists(folder))
