@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MySQLDBUpdater
+namespace EntityFrameworkCore.MySqlUpdater
 {
     public enum UpdateStatusCodes
     {

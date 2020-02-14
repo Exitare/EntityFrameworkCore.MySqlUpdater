@@ -3,9 +3,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MySQLDBUpdater
+namespace EntityFrameworkCore.MySqlUpdater
 {
-    public class HashSum
+    public partial class MySqlUpdater
     {
 
         /// <summary>

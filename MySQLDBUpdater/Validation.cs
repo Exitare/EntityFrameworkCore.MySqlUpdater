@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MySQLDBUpdater
+namespace EntityFrameworkCore.MySqlUpdater
 {
-    public partial class MySQLDBUpdater
+    public partial class MySqlUpdater
     {
 
         /// <summary>
@@ -14,7 +14,7 @@ namespace MySQLDBUpdater
         /// <param name="content"></param>
         /// <param name="searchTerm"></param>
         /// <returns></returns>
-        private int GetWordOccurence(string content, string searchTerm)
+        private static int GetWordOccurence(string content, string searchTerm)
         {
             string[] source = content.Split(new char[] { '.', '?', '!', ' ', ';', ':', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -32,7 +32,7 @@ namespace MySQLDBUpdater
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        private bool ValidateContent(string content, uint occurenceCount = 10)
+        private static bool ValidateContent(string content, uint occurenceCount = 10)
         {
             if (content.ToUpper().Contains("DROP * "))
                 return false;

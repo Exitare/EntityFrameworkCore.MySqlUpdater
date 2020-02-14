@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MySQLDBUpdater\MySQLDBUpdater.csproj" />
+    <ProjectReference Include="..\MySQLDBUpdater\EntityFrameworkCore.MySqlUpdater.csproj" />
   </ItemGroup>
 
 </Project>
