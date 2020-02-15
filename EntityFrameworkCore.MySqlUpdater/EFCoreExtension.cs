@@ -23,8 +23,27 @@ namespace EntityFrameworkCore.MySqlUpdater
             if (await MySqlUpdater.IsUpdatesTableAvailable(db))
                return await MySqlUpdater.UpdateDB(db, folders);
             else
-               return await MySqlUpdater.UpdateDB(db, folders, true);
+                // TODO: if createupdate is false, return with warning.
+               return await MySqlUpdater.UpdateDB(db, folders, creatueUpdateFolder);
 
+        }
+
+        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string file)
+        {
+            string ext = Path.GetExtension(file);
+
+            if (ext != ".sql")
+                return UpdateStatusCodes.NOT_A_SQL_FILE;
+
+            try
+            {
+                string content = File.ReadAllText(file);
+                return await MySqlUpdater.ExecuteQueries(db, content);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         /// <summary>
@@ -35,7 +54,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="schemaName"></param>
         /// <param name="baseFilePath"></param>
         /// <returns></returns>
-        public async static Task<bool> ApplyBaseFiles(this DbContext db, string schemaName, string baseFilePath)
+        public async static Task<bool> ApplyBaseFile(this DbContext db, string schemaName, string baseFilePath)
         {
             if (await MySqlUpdater.GetTableCount(db, schemaName) == 0)
             {
