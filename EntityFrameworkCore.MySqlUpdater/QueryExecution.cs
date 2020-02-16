@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace EntityFrameworkCore.MySqlUpdater
@@ -22,17 +22,11 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         public static async Task InsertHash(DbContext context, string filePath, string hash)
         {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            var filename = GetFileName(filePath);
-
-            Console.WriteLine(filename);
+            var filename = Path.GetFileName(filePath);
             try
             {
-
                 var conn = context.Database.GetDbConnection();
-                string query = $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES({filename},{hash},'RELEASED', {DateTime.UtcNow},0);";
+                string query = $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES('{filename}','{hash}','RELEASED', '{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}',0);";
                 if (conn.State != ConnectionState.Open)
                 {
                     conn.Close();
@@ -43,17 +37,46 @@ namespace EntityFrameworkCore.MySqlUpdater
                 {
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
-                    stopWatch.Stop();
+                 
                 }
-
-                TimeSpan ts = stopWatch.Elapsed;
-
-                await UpdateSpeed(context, filename, ts);
             }
             catch
             {
-                stopWatch.Stop();
+                throw;
+            }
+        }
 
+
+        /// <summary>
+        /// Inserts a new update object into the db
+        /// <param name="context"></param>
+        /// <param name="name"></param>
+        /// <param name="hash"></param>
+        /// </summary>
+        public static async Task InsertHash(DbContext context, string filePath)
+        {
+            var filename = Path.GetFileName(filePath);
+            string content = File.ReadAllText(filePath);
+            string hash = CreateSHA1Hash(content);
+            try
+            {
+
+                var conn = context.Database.GetDbConnection();
+                string query = $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES('{filename}','{hash}','RELEASED', '{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}',0);";
+                if (conn.State != ConnectionState.Open)
+                {
+                    conn.Close();
+                    await conn.OpenAsync();
+                }
+
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = query;
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+            catch
+            {
                 throw;
             }
         }
@@ -62,18 +85,16 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// Updates the speed 
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="name"></param>
+        /// <param name="filePath"></param>
         /// <param name="ts"></param>
         /// <returns></returns>
-        private static async Task<bool> UpdateSpeed(DbContext context, string filename, TimeSpan ts)
+        private static async Task<bool> UpdateSpeed(DbContext context, string filePath, TimeSpan ts)
         {
-          
             try
             {
+                var filename = Path.GetFileName(filePath);
                 var conn = context.Database.GetDbConnection();
-                // TODO: Escape queries
-                string query = $@"UPDATE updates SET spped = {ts.Seconds} WHERE name = {filename};";
-
+                string query = $@"UPDATE updates SET speed = '{ts.Milliseconds}' WHERE name = '{filename}';";
                 if (conn.State != ConnectionState.Open)
                 {
                     conn.Close();
@@ -99,12 +120,10 @@ namespace EntityFrameworkCore.MySqlUpdater
         public static async Task UpdateHash(DbContext context, string filePath, string hash)
         {
             var conn = context.Database.GetDbConnection();
-            var filename = GetFileName(filePath);
+            var filename = Path.GetFileName(filePath);
             try
             {
-
-                // TODO: Escape queries
-                string query = $@"UPDATE updates SET hash = {hash} WHERE name = {filename};  ";
+                string query = $@"UPDATE updates SET hash = '{hash}' WHERE name = '{filename}';  ";
                 if (conn.State != ConnectionState.Open)
                 {
                     conn.Close();
@@ -131,19 +150,24 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="content"></param>
         /// <param name="testSQL"></param>
         /// <returns></returns>
-        public static async Task<UpdateStatusCodes> ExecuteQuery(DbContext context, string content, bool testSQL = false)
+        public static async Task<TimeSpan> ExecuteQuery(DbContext context, string content)
         {
-            if (testSQL)
-                if (!ValidateContent(content))
-                    return UpdateStatusCodes.INSECURE_SQL_QUERY;
             try
             {
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+
                 await context.Database.ExecuteSqlRawAsync(content).ConfigureAwait(false);
-                return UpdateStatusCodes.SUCCESS;
+
+                stopWatch.Stop();
+                TimeSpan ts = stopWatch.Elapsed;
+
+                return ts;
             }
             catch
             {
-                return await ExecuteQuery(context, content).ConfigureAwait(false);
+                // Try fallback before throwing
+                return await ExecuteQueryFallback(context, content).ConfigureAwait(false);
             }
         }
 
@@ -153,8 +177,10 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="context"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        private static async Task<UpdateStatusCodes> ExecuteQuery(DbContext context, string content)
-        {      
+        private static async Task<TimeSpan> ExecuteQueryFallback(DbContext context, string content)
+        {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             try
             {
                 var conn = context.Database.GetDbConnection();
@@ -169,11 +195,14 @@ namespace EntityFrameworkCore.MySqlUpdater
                 {
                     command.CommandText = content;
                     await command.ExecuteNonQueryAsync();
-                    return UpdateStatusCodes.SUCCESS;
+                    stopWatch.Stop();
+                    TimeSpan ts = stopWatch.Elapsed;
+                    return ts;
                 }
             }
             catch
             {
+                stopWatch.Stop();
                 throw;
             }
 
@@ -185,13 +214,14 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// Checks if the update is already applied to the db
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="filename"></param>
+        /// <param name="filePath"></param>
         /// <param name="hashsum"></param>
         /// <returns></returns>
-        private static async Task<SHAStatus> IsUpdateAlreadyApplied(DbContext context, string filename, string hashsum)
+        private static async Task<SHAStatus> IsUpdateAlreadyApplied(DbContext context, string filePath, string hashsum)
         {
             try
             {
+                var filename = Path.GetFileName(filePath);
                 var conn = context.Database.GetDbConnection();
                 string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
 

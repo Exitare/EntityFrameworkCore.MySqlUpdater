@@ -17,9 +17,8 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="folders"></param>
         /// <param name="createUpdateTable"></param>
         /// <returns></returns>
-        public static async Task<bool> UpdateDB(DbContext context, List<string> folders, bool createUpdateTable = false)
+        public static async Task<UpdateStatusCodes> UpdateDB(DbContext context, List<string> folders)
         {
-
             foreach (string folder in folders)
             {
                 if (!Directory.Exists(folder))
@@ -42,9 +41,9 @@ namespace EntityFrameworkCore.MySqlUpdater
                         switch (applied)
                         {
                             case SHAStatus.CHANGED:
-                                Console.WriteLine($"Hashsum for {file} changed! Updating!");
+                                Console.WriteLine($"Hashsum for {file} changed! Updating...!");
                                 await ExecuteQuery(context, content);
-                                await UpdateHash(context, file, hash); 
+                                await UpdateHash(context, file, hash);
                                 break;
 
                             case SHAStatus.EQUALS:
@@ -52,8 +51,10 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                             case SHAStatus.NOT_APPLIED:
                                 Console.WriteLine($"Applying {file}");
-                                await ExecuteQuery(context, content);
+                                TimeSpan ts = await ExecuteQuery(context, content);
                                 await InsertHash(context, file, hash);
+                                await UpdateSpeed(context, file, ts);
+
                                 continue;
 
                             default:
@@ -68,10 +69,10 @@ namespace EntityFrameworkCore.MySqlUpdater
 
 
                 }
-              
+
             }
 
-            return true;
+            return UpdateStatusCodes.SUCCESS;
         }
 
     }

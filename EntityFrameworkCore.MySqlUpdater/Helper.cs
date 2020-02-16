@@ -1,19 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EntityFrameworkCore.MySqlUpdater
 {
     public partial class MySqlUpdater
     {
-
-
-
-
         /// <summary>
         /// Returns the table count of the given schema
         /// </summary>
@@ -66,10 +58,11 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public static async Task<bool> IsUpdatesTableAvailable(DbContext context)
         {
-            var conn = context.Database.GetDbConnection();
-
+          
             try
             {
+                var conn = context.Database.GetDbConnection();
+
                 string query = $"SHOW tables LIKE 'updates';";
 
                 if (conn.State != ConnectionState.Open)
@@ -97,11 +90,52 @@ namespace EntityFrameworkCore.MySqlUpdater
         }
 
         /// <summary>
+        /// Creates the updates table
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static async Task<bool> CreateUpdatesFolder(DbContext context)
+        {
+            try
+            {
+                var conn = context.Database.GetDbConnection();
+
+                string query = $"DROP TABLE IF EXISTS `updates`;" +
+                    $" CREATE TABLE `updates` ( " +
+                    $"`name` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'filename with extension of the update.', " +
+                    $" `hash` char(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '' COMMENT 'sha1 hash of the sql file.',  " +
+                    $"`state` enum('RELEASED','ARCHIVED') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'RELEASED' COMMENT 'defines if an update is released or archived.', " +
+                    $" `timestamp` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT 'timestamp when the query was applied.'," +
+                    $" `speed` int (10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'time the query takes to apply in ms.',  " +
+                    $"PRIMARY KEY(`name`) USING BTREE) ENGINE = MyISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'List of all applied updates in this database.' ROW_FORMAT = Dynamic;";
+
+                if (conn.State != ConnectionState.Open)
+                {
+                    conn.Close();
+                    await conn.OpenAsync();
+                }
+
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = query;
+                    await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    return true;
+                }
+
+            }
+            catch
+            {
+
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Creates the 
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static async Task<bool> CreateUpdateTable(DbContext context)
+        public static async Task CreateUpdateTable(DbContext context)
         {
             var conn = context.Database.GetDbConnection();
             try
@@ -119,7 +153,7 @@ namespace EntityFrameworkCore.MySqlUpdater
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
 
-                    return true;
+                    return;
                 }
             }
             catch
@@ -129,19 +163,5 @@ namespace EntityFrameworkCore.MySqlUpdater
             }
 
         }
-
-
-        /// <summary>
-        /// Extracts the filename from a given path
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static string GetFileName(string path)
-        {
-            return path.Split('/').Last();
-        }
-
-
-
     }
 }

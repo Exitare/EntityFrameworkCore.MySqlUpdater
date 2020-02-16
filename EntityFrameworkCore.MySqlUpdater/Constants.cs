@@ -14,6 +14,8 @@ namespace EntityFrameworkCore.MySqlUpdater
         EMPTY_CONTENT = 0x50,
         UPDATE_ALREADY_APPLIED = 0x60,
         MAX_ALLOWED_PACKAGE_LIMIT_TOO_SMALL = 0x70,
+        SCHEMA_NOT_EMPTY = 0x80,
+        UPDATE_FOLDER_MISSING = 0x90,
     }
 
     public enum SHAStatus
