@@ -38,7 +38,7 @@ namespace EntityFrameworkCore.MySqlUpdater
             try
             {
                 string content = File.ReadAllText(file);
-                return await MySqlUpdater.ExecuteQueries(db, content);
+                return await MySqlUpdater.ExecuteQuery(db, content);
             }
             catch
             {
@@ -54,22 +54,22 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="schemaName"></param>
         /// <param name="baseFilePath"></param>
         /// <returns></returns>
-        public async static Task<bool> ApplyBaseFile(this DbContext db, string schemaName, string baseFilePath)
+        public async static Task<UpdateStatusCodes> ApplyBaseFile(this DbContext db, string schemaName, string baseFilePath)
         {
+            Console.WriteLine(await MySqlUpdater.GetTableCount(db, schemaName));
             if (await MySqlUpdater.GetTableCount(db, schemaName) == 0)
             {
                 try
                 {
                     string content = File.ReadAllText(baseFilePath);
-                    await MySqlUpdater.ExecuteQueries(db, content);
-                    return true;
+                    return await MySqlUpdater.ExecuteQuery(db, content);
                 } catch
                 {
                     throw;
                 }
             }
             
-            return false;
+            return UpdateStatusCodes.ERROR_EXECUTING_SQL;
         }
     }
 }

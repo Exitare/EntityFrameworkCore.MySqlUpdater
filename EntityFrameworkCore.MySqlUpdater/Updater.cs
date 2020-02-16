@@ -20,9 +20,6 @@ namespace EntityFrameworkCore.MySqlUpdater
         public static async Task<bool> UpdateDB(DbContext context, List<string> folders, bool createUpdateTable = false)
         {
 
-            if(createUpdateTable)
-
-
             foreach (string folder in folders)
             {
                 if (!Directory.Exists(folder))
@@ -30,7 +27,6 @@ namespace EntityFrameworkCore.MySqlUpdater
                     Console.WriteLine($"Directory {folder} can not be found! Skipping folder!");
                     continue;
                 }
-
 
                 foreach (string file in Directory.EnumerateFiles(folder, "*.sql").OrderBy(filename => filename))
                 {
@@ -46,14 +42,18 @@ namespace EntityFrameworkCore.MySqlUpdater
                         switch (applied)
                         {
                             case SHAStatus.CHANGED:
-                                await ExecuteQueries(context, content);
+                                Console.WriteLine($"Hashsum for {file} changed! Updating!");
+                                await ExecuteQuery(context, content);
+                                await UpdateHash(context, file, hash); 
                                 break;
 
                             case SHAStatus.EQUALS:
                                 continue;
 
                             case SHAStatus.NOT_APPLIED:
-                                await ExecuteQueries(context, content);
+                                Console.WriteLine($"Applying {file}");
+                                await ExecuteQuery(context, content);
+                                await InsertHash(context, file, hash);
                                 continue;
 
                             default:
