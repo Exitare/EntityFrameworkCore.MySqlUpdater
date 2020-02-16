@@ -9,6 +9,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <summary>
         /// Returns the table count of the given schema
         /// </summary>
+        /// <param name="context"></param>
         /// <param name="schemaName"></param>
         /// <returns></returns>
         public static async Task<long> GetTableCount(DbContext context, string schemaName)
@@ -54,7 +55,8 @@ namespace EntityFrameworkCore.MySqlUpdater
 
         /// <summary>
         /// Checks wether the updates table is available or not
-        /// </summary>
+        /// </summary> 
+        /// <param name="context"></param>
         /// <returns></returns>
         public static async Task<bool> IsUpdatesTableAvailable(DbContext context)
         {
