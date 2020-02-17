@@ -27,33 +27,33 @@ namespace EntityFrameworkCore.MySqlUpdater
                     continue;
                 }
 
-                foreach (string file in Directory.EnumerateFiles(folder, "*.sql").OrderBy(filename => filename))
+                foreach (string filePath in Directory.EnumerateFiles(folder, "*.sql").OrderBy(filename => filename))
                 {
                     try
                     {
-                        string content = File.ReadAllText(file);
+                        string content = File.ReadAllText(filePath);
                         string hash = CreateSHA1Hash(content);
 
                         if (string.IsNullOrEmpty(content))
                             continue;
 
-                        SHAStatus applied = await IsUpdateAlreadyApplied(context, file, hash);
+                        SHAStatus applied = await IsUpdateAlreadyApplied(context, filePath, hash);
                         switch (applied)
                         {
                             case SHAStatus.CHANGED:
-                                Console.WriteLine($"Hashsum for {file} changed! Updating...!");
+                                Console.WriteLine($"Hashsum for {filePath} changed! Updating...!");
                                 await ExecuteQuery(context, content);
-                                await UpdateHash(context, file, hash);
+                                await UpdateHash(context, filePath, hash);
                                 break;
 
                             case SHAStatus.EQUALS:
                                 continue;
 
                             case SHAStatus.NOT_APPLIED:
-                                Console.WriteLine($"Applying {file}");
+                                Console.WriteLine($"Applying {filePath}");
                                 TimeSpan ts = await ExecuteQuery(context, content);
-                                await InsertHash(context, file, hash);
-                                await UpdateSpeed(context, file, ts);
+                                await InsertHash(context, filePath, hash);
+                                await UpdateSpeed(context, filePath, ts);
 
                                 continue;
 

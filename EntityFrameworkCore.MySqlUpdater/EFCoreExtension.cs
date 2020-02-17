@@ -33,23 +33,29 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// Applies the given single sql file
         /// </summary>
         /// <param name="db"></param>
-        /// <param name="file"></param>
+        /// <param name="filePath"></param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string file)
+        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath)
         {
-            string ext = Path.GetExtension(file);
-
+          
+            string ext = Path.GetExtension(filePath);
             if (ext != ".sql")
                 return UpdateStatusCodes.NOT_A_SQL_FILE;
 
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine($"Can not locate file {filePath}!");
+                return UpdateStatusCodes.FILE_NOT_FOUND;
+            }
+            
             try
             {
                 if (await MySqlUpdater.IsUpdatesTableAvailable(db))
                 {
-
-                    string content = File.ReadAllText(file);
+                    Console.WriteLine($"Applying {Path.GetFileName(filePath)}");
+                    string content = File.ReadAllText(filePath);
                     TimeSpan ts = await MySqlUpdater.ExecuteQuery(db, content);
-                    await MySqlUpdater.InsertHash(db, file);
+                    await MySqlUpdater.InsertHash(db, filePath);
                     return UpdateStatusCodes.SUCCESS;
                 }
 

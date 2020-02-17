@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace EntityFrameworkCore.MySqlUpdater
@@ -161,6 +162,57 @@ namespace EntityFrameworkCore.MySqlUpdater
             catch
             {
 
+                throw;
+            }
+
+        }
+
+
+        /// <summary>
+        /// Checks if the update is already applied to the db
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="filePath"></param>
+        /// <param name="hashsum"></param>
+        /// <returns></returns>
+        private static async Task<SHAStatus> IsUpdateAlreadyApplied(DbContext context, string filePath, string hashsum)
+        {
+            try
+            {
+                var filename = Path.GetFileName(filePath);
+                var conn = context.Database.GetDbConnection();
+                string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
+
+                if (conn.State != ConnectionState.Open)
+                {
+                    conn.Close();
+                    await conn.OpenAsync();
+                }
+
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = query;
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        if (!reader.HasRows)
+                            return SHAStatus.NOT_APPLIED;
+
+                        while (reader.Read())
+                        {
+                            if (hashsum.ToUpper() == reader.GetString(0).ToUpper())
+                                return SHAStatus.EQUALS;
+
+                            return SHAStatus.CHANGED;
+                        }
+
+                        return SHAStatus.NOT_APPLIED;
+                    }
+
+                }
+
+            }
+            catch
+            {
                 throw;
             }
 
