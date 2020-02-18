@@ -15,7 +15,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         UPDATE_ALREADY_APPLIED = 0x60,
         MAX_ALLOWED_PACKAGE_LIMIT_TOO_SMALL = 0x70,
         SCHEMA_NOT_EMPTY = 0x80,
-        UPDATE_FOLDER_MISSING = 0x90,
+        UPDATE_TABLE_MISSING = 0x90,
         FILE_NOT_FOUND = 0x100,
     }
 
