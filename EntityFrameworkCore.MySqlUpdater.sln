@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityFrameworkCore.MySqlUpdater", "EntityFrameworkCore.MySqlUpdater\EntityFrameworkCore.MySqlUpdater.csproj", "{B869B849-8B1C-4328-9625-249D7F1A7CBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{4C83128F-C11D-4ECC-9406-9FA7BF62ED16}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{D5154C86-172A-4F29-A765-5381E70EE5B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{B869B849-8B1C-4328-9625-249D7F1A7CBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B869B849-8B1C-4328-9625-249D7F1A7CBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B869B849-8B1C-4328-9625-249D7F1A7CBF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C83128F-C11D-4ECC-9406-9FA7BF62ED16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C83128F-C11D-4ECC-9406-9FA7BF62ED16}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C83128F-C11D-4ECC-9406-9FA7BF62ED16}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C83128F-C11D-4ECC-9406-9FA7BF62ED16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5154C86-172A-4F29-A765-5381E70EE5B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5154C86-172A-4F29-A765-5381E70EE5B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5154C86-172A-4F29-A765-5381E70EE5B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5154C86-172A-4F29-A765-5381E70EE5B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

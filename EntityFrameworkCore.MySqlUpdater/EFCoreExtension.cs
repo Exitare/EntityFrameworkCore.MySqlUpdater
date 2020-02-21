@@ -20,7 +20,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="createUpdateFolder"></param>
         /// <param name="hashsumTracking">Activate the hashsum tracking</param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashsumTracking)
+        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashsumTracking = true)
         {
             Constants.HashSumTracking = hashsumTracking;
 
@@ -43,7 +43,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="db"></param>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking)
+        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking = true)
         {
           
             string ext = Path.GetExtension(filePath);
@@ -60,6 +60,12 @@ namespace EntityFrameworkCore.MySqlUpdater
             {
                 string content = File.ReadAllText(filePath);
 
+                // Check for emtpy file
+                if (string.IsNullOrWhiteSpace(content))
+                    return UpdateStatusCodes.EMPTY_CONTENT;
+
+
+                // Check if hashSumTracking is deactivated
                 if (!hashSumTracking)
                 {
                     await MySqlUpdater.ExecuteQuery(db, content);
@@ -73,8 +79,6 @@ namespace EntityFrameworkCore.MySqlUpdater
                 Console.WriteLine($"Applying {Path.GetFileName(filePath)}");
 
                 TimeSpan ts = await MySqlUpdater.ExecuteQuery(db, content);
-
-
 
                 await MySqlUpdater.InsertHash(db, filePath);
                 return UpdateStatusCodes.SUCCESS;
