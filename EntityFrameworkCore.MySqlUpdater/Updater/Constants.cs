@@ -28,9 +28,6 @@ namespace EntityFrameworkCore.MySqlUpdater
 
     public class Constants
     {
-        public static bool Verbose = false;
         public static bool HashSumTracking = true;
     }
-    
-
 }

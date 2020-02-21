@@ -49,9 +49,6 @@ namespace EntityFrameworkCore.MySqlUpdater
             {
                 conn.Close();
             }
-
-
-
         }
 
         /// <summary>
@@ -111,13 +108,8 @@ namespace EntityFrameworkCore.MySqlUpdater
             try
             {
                 var filename = Path.GetFileName(filePath);
-               
-              
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
+
+                await conn.OpenAsync();
 
                 string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
 
@@ -134,6 +126,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 #if DEBUG
                             Console.WriteLine($"DBHash: {reader.GetValue(0)}");
 #endif
+
                             if (hashsum.ToUpper() == reader.GetString(0).ToUpper())
                                 return SHAStatus.EQUALS;
 

@@ -36,38 +36,45 @@ namespace EntityFrameworkCore.MySqlUpdater
                         if (string.IsNullOrEmpty(content))
                             continue;
 
+                        if (!Constants.HashSumTracking)
+                        {
+                            await ExecuteQuery(context, content);
+#if DEBUG
+                            Console.WriteLine($"Applied {filePath}");
+#endif
+                            continue;
+                        }
+
+
                         SHAStatus applied = await IsUpdateAlreadyApplied(context, filePath, hash);
                         switch (applied)
                         {
                             case SHAStatus.CHANGED:
                                 await ExecuteQuery(context, content);
+                                await UpdateHash(context, filePath, hash);
 
-                                if(Constants.HashSumTracking)
-                                    await UpdateHash(context, filePath, hash);
-
-                                if(Constants.Verbose)
-                                    Console.WriteLine($"Hashsum for {filePath} changed! Updated!");
+#if DEBUG
+                                Console.WriteLine($"Applied {filePath}");
+#endif
                                 break;
 
                             case SHAStatus.EQUALS:
-                                Console.WriteLine(Constants.Verbose);
-                                if(Constants.Verbose)
-                                    Console.WriteLine($"Hashsum for {filePath} did not change!");
+#if DEBUG
+                                Console.WriteLine($"Hashsum for {filePath} did not change!");
+#endif
                                 continue;
 
                             case SHAStatus.NOT_APPLIED:
 
                                 TimeSpan ts = await ExecuteQuery(context, content);
+                                await InsertHash(context, filePath, hash);
+                                await UpdateSpeed(context, filePath, ts);
 
-                                if (Constants.HashSumTracking)
-                                {
-                                    await InsertHash(context, filePath, hash);
-                                    await UpdateSpeed(context, filePath, ts);
-                                }
-
-                                if (Constants.Verbose)
-                                    Console.WriteLine($"Applied {filePath}");
+#if DEBUG
+                                Console.WriteLine($"Applied {filePath}");
+#endif
                                 continue;
+
 
                             default:
                                 continue;

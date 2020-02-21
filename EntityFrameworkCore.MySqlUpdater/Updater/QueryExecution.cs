@@ -23,15 +23,13 @@ namespace EntityFrameworkCore.MySqlUpdater
         public static async Task InsertHash(DbContext context, string filePath, string hash)
         {
             var filename = Path.GetFileName(filePath);
+            var conn = context.Database.GetDbConnection();
             try
             {
-                var conn = context.Database.GetDbConnection();
+
                 string query = $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES('{filename}','{hash}','RELEASED', '{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}',0);";
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
+
+                await conn.OpenAsync();
 
                 using (var command = conn.CreateCommand())
                 {
@@ -43,6 +41,10 @@ namespace EntityFrameworkCore.MySqlUpdater
             catch
             {
                 throw;
+            }
+            finally
+            {
+                conn.Close();
             }
         }
 

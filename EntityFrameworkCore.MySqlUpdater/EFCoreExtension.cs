@@ -20,25 +20,22 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="createUpdateFolder"></param>
         /// <param name="hashsumTracking">Activate the hashsum tracking</param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashsumTracking = true)
+        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashsumTracking)
         {
-            Constants.Verbose = hashsumTracking;
-            if (await MySqlUpdater.IsUpdatesTableAvailable(db))
+            Constants.HashSumTracking = hashsumTracking;
+
+            if(!hashsumTracking)
                 return await MySqlUpdater.UpdateDB(db, folders);
+
+            if (await MySqlUpdater.IsUpdatesTableAvailable(db))
+                    return await MySqlUpdater.UpdateDB(db, folders);
             else
             {
-                Console.WriteLine("No updates table detected! Aborting! Please call CreateUpdatesTable() to create the required table. ");
+                Console.WriteLine("No updates table detected! Aborting! Please call CreateUpdatesTable() to create the required table or set hashSumTracking = false ");
                 return UpdateStatusCodes.UPDATE_TABLE_MISSING;
             }
 
         }
-
-        public static void SetVerboseOutput(this DbContext db, bool activate)
-        {
-            Constants.Verbose = activate;
-            Console.WriteLine(Constants.Verbose);
-        }
-
 
         /// <summary>
         /// Applies the given single sql file
@@ -46,7 +43,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="db"></param>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath)
+        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking)
         {
           
             string ext = Path.GetExtension(filePath);
@@ -61,13 +58,24 @@ namespace EntityFrameworkCore.MySqlUpdater
 
             try
             {
+                string content = File.ReadAllText(filePath);
+
+                if (!hashSumTracking)
+                {
+                    await MySqlUpdater.ExecuteQuery(db, content);
+                    return UpdateStatusCodes.SUCCESS;
+                }
+
 
                 if (!await MySqlUpdater.IsUpdatesTableAvailable(db))
                     return UpdateStatusCodes.UPDATE_TABLE_MISSING;
 
                 Console.WriteLine($"Applying {Path.GetFileName(filePath)}");
-                string content = File.ReadAllText(filePath);
+
                 TimeSpan ts = await MySqlUpdater.ExecuteQuery(db, content);
+
+
+
                 await MySqlUpdater.InsertHash(db, filePath);
                 return UpdateStatusCodes.SUCCESS;
 
@@ -87,8 +95,9 @@ namespace EntityFrameworkCore.MySqlUpdater
         public async static Task<bool> CreateUpdatesTable(this DbContext db)
         {
             if (await MySqlUpdater.IsUpdatesTableAvailable(db)) {
-                if(Constants.Verbose)
-                    Console.WriteLine("Updates table already exist!");
+#if DEBUG
+                Console.WriteLine("Updates table already exist!");
+#endif
                 return false;
             }
 
@@ -96,13 +105,8 @@ namespace EntityFrameworkCore.MySqlUpdater
 
             try
             {
-             
 
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
+                await conn.OpenAsync();
 
                 string query = $"DROP TABLE IF EXISTS `updates`;" +
                     $" CREATE TABLE `updates` ( " +

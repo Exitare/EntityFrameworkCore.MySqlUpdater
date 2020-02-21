@@ -5,8 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Exitare</Authors>
     <Company>Exitare</Company>
-    <Description>DBUpdater for Entity Framework Core. 
-Use this updater to update your database with your latest sql files by providing all folders you want to apply.</Description>
+    <Description>DBUpdater for Entity Framework Core. Use this updater to update your database at once.</Description>
     <PackageTags>MySQL, Updater, Automatic</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Version>1.0.7</Version>
