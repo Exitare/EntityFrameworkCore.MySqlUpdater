@@ -18,7 +18,7 @@ namespace EntityFrameworkCore.MySqlUpdater
             using (SHA1Managed sha1 = new SHA1Managed())
             {
                 var hash = new SHA1Managed().ComputeHash(Encoding.UTF8.GetBytes(content));
-                return string.Concat(hash.Select(b => b.ToString("x2")));
+                return string.Concat(hash.Select(b => b.ToString("x2").ToUpper()));
 
             }
         }

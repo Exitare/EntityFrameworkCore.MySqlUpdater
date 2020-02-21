@@ -37,7 +37,7 @@ namespace EntityFrameworkCore.MySqlUpdater
                 {
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
-                 
+
                 }
             }
             catch
@@ -58,16 +58,13 @@ namespace EntityFrameworkCore.MySqlUpdater
             var filename = Path.GetFileName(filePath);
             string content = File.ReadAllText(filePath);
             string hash = CreateSHA1Hash(content);
+            var conn = context.Database.GetDbConnection();
+
             try
             {
 
-                var conn = context.Database.GetDbConnection();
+                await conn.OpenAsync();
                 string query = $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES('{filename}','{hash}','RELEASED', '{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}',0);";
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
 
                 using (var command = conn.CreateCommand())
                 {
@@ -78,6 +75,10 @@ namespace EntityFrameworkCore.MySqlUpdater
             catch
             {
                 throw;
+            }
+            finally
+            {
+                conn.Close();
             }
         }
 
@@ -90,16 +91,14 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         private static async Task<bool> UpdateSpeed(DbContext context, string filePath, TimeSpan ts)
         {
+            var conn = context.Database.GetDbConnection();
             try
             {
                 var filename = Path.GetFileName(filePath);
-                var conn = context.Database.GetDbConnection();
+
                 string query = $@"UPDATE updates SET speed = '{ts.Milliseconds}' WHERE name = '{filename}';";
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
+
+                await conn.OpenAsync();
 
                 using (var command = conn.CreateCommand())
                 {
@@ -115,6 +114,10 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 throw;
             }
+            finally
+            {
+                conn.Close();
+            }
         }
 
         public static async Task UpdateHash(DbContext context, string filePath, string hash)
@@ -124,11 +127,8 @@ namespace EntityFrameworkCore.MySqlUpdater
             try
             {
                 string query = $@"UPDATE updates SET hash = '{hash}' WHERE name = '{filename}';  ";
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
+
+                await conn.OpenAsync();
 
                 using (var command = conn.CreateCommand())
                 {
@@ -141,6 +141,10 @@ namespace EntityFrameworkCore.MySqlUpdater
             {
                 throw;
             }
+            finally
+            {
+                conn.Close();
+            }
         }
 
         /// <summary>
@@ -152,10 +156,11 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public static async Task<TimeSpan> ExecuteQuery(DbContext context, string content)
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             try
             {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
+              
 
                 await context.Database.ExecuteSqlRawAsync(content).ConfigureAwait(false);
 
@@ -169,6 +174,10 @@ namespace EntityFrameworkCore.MySqlUpdater
                 // Try fallback before throwing
                 return await ExecuteQueryFallback(context, content).ConfigureAwait(false);
             }
+            finally
+            {
+                stopWatch.Stop();
+            }
         }
 
         /// <summary>
@@ -179,18 +188,17 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         private static async Task<TimeSpan> ExecuteQueryFallback(DbContext context, string content)
         {
+
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
+
+            var conn = context.Database.GetDbConnection();
+
             try
             {
-                var conn = context.Database.GetDbConnection();
 
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
-
+                await conn.OpenAsync();
+              
                 using (var command = conn.CreateCommand())
                 {
                     command.CommandText = content;
@@ -202,9 +210,15 @@ namespace EntityFrameworkCore.MySqlUpdater
             }
             catch
             {
-                stopWatch.Stop();
+
                 throw;
             }
+            finally
+            {
+                stopWatch.Stop();
+                conn.Close();
+            }
+
 
         }
     }

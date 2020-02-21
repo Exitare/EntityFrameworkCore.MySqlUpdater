@@ -43,7 +43,6 @@ namespace EntityFrameworkCore.MySqlUpdater
             if (content.ToUpper().Contains("TRUNCATE"))
                 return false;
 
-
             if (GetWordOccurence(content, "delete") >= occurenceCount)
                 return false;
 

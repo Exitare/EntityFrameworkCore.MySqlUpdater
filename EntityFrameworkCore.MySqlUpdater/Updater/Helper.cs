@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Data;
 using System.IO;
 using System.Threading.Tasks;
@@ -15,17 +16,12 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public static async Task<long> GetTableCount(DbContext context, string schemaName)
         {
+            var conn = context.Database.GetDbConnection();
             try
             {
-                var conn = context.Database.GetDbConnection();
+                await conn.OpenAsync();
+
                 string query = $"SELECT count(table_name) as count FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = '{schemaName}';";
-
-                if(conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
-
 
                 using (var command = conn.CreateCommand())
                 {
@@ -49,6 +45,10 @@ namespace EntityFrameworkCore.MySqlUpdater
             {
                 throw;
             }
+            finally
+            {
+                conn.Close();
+            }
 
 
 
@@ -61,18 +61,13 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public static async Task<bool> IsUpdatesTableAvailable(DbContext context)
         {
-          
+            var conn = context.Database.GetDbConnection();
             try
             {
-                var conn = context.Database.GetDbConnection();
+
+                await conn.OpenAsync();
 
                 string query = $"SHOW tables LIKE 'updates';";
-
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
 
                 using (var command = conn.CreateCommand())
                 {
@@ -90,42 +85,12 @@ namespace EntityFrameworkCore.MySqlUpdater
                 throw;
             }
 
-        }
-
-        /// <summary>
-        /// Creates the 
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public static async Task CreateUpdateTable(DbContext context)
-        {
-            var conn = context.Database.GetDbConnection();
-            try
+            finally
             {
-                string query = $"SHOW tables LIKE 'updates';";
-
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
-
-                using (var command = conn.CreateCommand())
-                {
-                    command.CommandText = query;
-                    await command.ExecuteNonQueryAsync();
-
-                    return;
-                }
-            }
-            catch
-            {
-
-                throw;
+                conn.Close();
             }
 
         }
-
 
         /// <summary>
         /// Checks if the update is already applied to the db
@@ -136,17 +101,25 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         private static async Task<SHAStatus> IsUpdateAlreadyApplied(DbContext context, string filePath, string hashsum)
         {
+
+#if DEBUG
+            Console.WriteLine($"FileHash: {hashsum}");
+#endif
+
+            var conn = context.Database.GetDbConnection();
+
             try
             {
                 var filename = Path.GetFileName(filePath);
-                var conn = context.Database.GetDbConnection();
-                string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
-
+               
+              
                 if (conn.State != ConnectionState.Open)
                 {
                     conn.Close();
                     await conn.OpenAsync();
                 }
+
+                string query = $"SELECT hash FROM updates WHERE name = '{filename}';";
 
                 using (var command = conn.CreateCommand())
                 {
@@ -158,6 +131,9 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                         while (reader.Read())
                         {
+#if DEBUG
+                            Console.WriteLine($"DBHash: {reader.GetValue(0)}");
+#endif
                             if (hashsum.ToUpper() == reader.GetString(0).ToUpper())
                                 return SHAStatus.EQUALS;
 
@@ -173,6 +149,10 @@ namespace EntityFrameworkCore.MySqlUpdater
             catch
             {
                 throw;
+            }
+            finally
+            {
+                conn.Close();
             }
 
         }

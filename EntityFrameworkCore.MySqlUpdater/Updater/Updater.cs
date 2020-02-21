@@ -15,7 +15,6 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         /// <param name="context"></param>
         /// <param name="folders"></param>
-        /// <param name="createUpdateTable"></param>
         /// <returns></returns>
         public static async Task<UpdateStatusCodes> UpdateDB(DbContext context, List<string> folders)
         {
@@ -41,20 +40,33 @@ namespace EntityFrameworkCore.MySqlUpdater
                         switch (applied)
                         {
                             case SHAStatus.CHANGED:
-                                Console.WriteLine($"Hashsum for {filePath} changed! Updating...!");
                                 await ExecuteQuery(context, content);
-                                await UpdateHash(context, filePath, hash);
+
+                                if(Constants.HashSumTracking)
+                                    await UpdateHash(context, filePath, hash);
+
+                                if(Constants.Verbose)
+                                    Console.WriteLine($"Hashsum for {filePath} changed! Updated!");
                                 break;
 
                             case SHAStatus.EQUALS:
+                                Console.WriteLine(Constants.Verbose);
+                                if(Constants.Verbose)
+                                    Console.WriteLine($"Hashsum for {filePath} did not change!");
                                 continue;
 
                             case SHAStatus.NOT_APPLIED:
-                                Console.WriteLine($"Applying {filePath}");
-                                TimeSpan ts = await ExecuteQuery(context, content);
-                                await InsertHash(context, filePath, hash);
-                                await UpdateSpeed(context, filePath, ts);
 
+                                TimeSpan ts = await ExecuteQuery(context, content);
+
+                                if (Constants.HashSumTracking)
+                                {
+                                    await InsertHash(context, filePath, hash);
+                                    await UpdateSpeed(context, filePath, ts);
+                                }
+
+                                if (Constants.Verbose)
+                                    Console.WriteLine($"Applied {filePath}");
                                 continue;
 
                             default:

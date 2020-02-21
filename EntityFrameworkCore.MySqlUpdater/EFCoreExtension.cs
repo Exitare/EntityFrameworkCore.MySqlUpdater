@@ -18,9 +18,11 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="db"></param>
         /// <param name="folders"></param>
         /// <param name="createUpdateFolder"></param>
+        /// <param name="hashsumTracking">Activate the hashsum tracking</param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders)
+        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashsumTracking = true)
         {
+            Constants.Verbose = hashsumTracking;
             if (await MySqlUpdater.IsUpdatesTableAvailable(db))
                 return await MySqlUpdater.UpdateDB(db, folders);
             else
@@ -28,7 +30,15 @@ namespace EntityFrameworkCore.MySqlUpdater
                 Console.WriteLine("No updates table detected! Aborting! Please call CreateUpdatesTable() to create the required table. ");
                 return UpdateStatusCodes.UPDATE_TABLE_MISSING;
             }
+
         }
+
+        public static void SetVerboseOutput(this DbContext db, bool activate)
+        {
+            Constants.Verbose = activate;
+            Console.WriteLine(Constants.Verbose);
+        }
+
 
         /// <summary>
         /// Applies the given single sql file
@@ -70,20 +80,29 @@ namespace EntityFrameworkCore.MySqlUpdater
         }
 
         /// <summary>
-        /// Creates the required updates folder.
+        /// Creates the updates table.
         /// </summary>
         /// <param name="db"></param>
         /// <returns></returns>
         public async static Task<bool> CreateUpdatesTable(this DbContext db)
         {
             if (await MySqlUpdater.IsUpdatesTableAvailable(db)) {
-                Console.WriteLine("Updates table already exist!");
+                if(Constants.Verbose)
+                    Console.WriteLine("Updates table already exist!");
                 return false;
             }
 
+            var conn = db.Database.GetDbConnection();
+
             try
             {
-                var conn = db.Database.GetDbConnection();
+             
+
+                if (conn.State != ConnectionState.Open)
+                {
+                    conn.Close();
+                    await conn.OpenAsync();
+                }
 
                 string query = $"DROP TABLE IF EXISTS `updates`;" +
                     $" CREATE TABLE `updates` ( " +
@@ -94,24 +113,26 @@ namespace EntityFrameworkCore.MySqlUpdater
                     $" `speed` int (10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'time the query takes to apply in ms.',  " +
                     $"PRIMARY KEY(`name`) USING BTREE) ENGINE = MyISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'List of all applied updates in this database.' ROW_FORMAT = Dynamic;";
 
-                if (conn.State != ConnectionState.Open)
-                {
-                    conn.Close();
-                    await conn.OpenAsync();
-                }
 
                 using (var command = conn.CreateCommand())
                 {
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    conn.Close();
                     return true;
                 }
+              
 
             }
             catch
             {
 
                 throw;
+            }
+
+            finally
+            {
+                conn.Close();
             }
         }
 
