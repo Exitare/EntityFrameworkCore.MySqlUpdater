@@ -8,9 +8,9 @@
     <Description>DBUpdater for Entity Framework Core. Use this updater to update your database at once.</Description>
     <PackageTags>MySQL, Updater, Automatic</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Version>1.0.7</Version>
-    <AssemblyVersion>1.0.0.7</AssemblyVersion>
-    <FileVersion>1.0.0.7</FileVersion>
+    <Version>1.0.9</Version>
+    <AssemblyVersion>1.0.0.9</AssemblyVersion>
+    <FileVersion>1.0.0.9</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
