@@ -8,15 +8,16 @@
     <Description>DBUpdater for Entity Framework Core. Use this updater to update your database at once.</Description>
     <PackageTags>MySQL, Updater, Automatic</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Version>1.0.9</Version>
-    <AssemblyVersion>1.0.0.9</AssemblyVersion>
-    <FileVersion>1.0.0.9</FileVersion>
+    <Version>1.0.11-beta</Version>
+    <AssemblyVersion>1.0.0.10</AssemblyVersion>
+    <FileVersion>1.0.0.10</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Design" Version="1.1.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0-preview.1.20120.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +25,5 @@
       <Pack>true</Pack>
       <PackagePath>\</PackagePath>
     </Content>
-    <Folder Include="Updater\" />
   </ItemGroup>
 </Project>

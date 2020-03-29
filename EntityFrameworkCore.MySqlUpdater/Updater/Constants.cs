@@ -26,5 +26,7 @@ namespace EntityFrameworkCore.MySqlUpdater
     public class Constants
     {
         public static bool HashSumTracking = true;
+        public static int SQLTimeout = 60;
+        public static bool DebugOutput = false;
     }
 }
