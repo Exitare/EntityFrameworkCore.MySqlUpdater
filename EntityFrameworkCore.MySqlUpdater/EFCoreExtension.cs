@@ -13,6 +13,40 @@ namespace EntityFrameworkCore.MySqlUpdater
     {
 
         /// <summary>
+        /// Applies the provided base file to the database. If the db is already filled with tables, this function will return false
+        /// and will not execute anything.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="schemaName"></param>
+        /// <param name="baseFilePath"></param>
+        /// <returns></returns>
+        public async static Task<bool> ApplyBaseFile(this DbContext db, string schemaName, string baseFilePath, int timeOut = 60, bool debugOutput = false)
+        {
+            Constants.DebugOutput = debugOutput;
+            Constants.SQLTimeout = timeOut;
+
+            if (await MySqlUpdater.GetTableCount(db, schemaName) != 0)
+            {
+                if (debugOutput)
+                    Console.WriteLine("Schema is not empty, skipping!");
+                return true;
+            }
+
+
+            try
+            {
+                string content = File.ReadAllText(baseFilePath);
+                await MySqlUpdater.ExecuteQuery(db, content);
+
+                return true;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Applies all sql files, found in the specific folders
         /// </summary>
         /// <param name="db"></param>
@@ -20,19 +54,25 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="createUpdateFolder"></param>
         /// <param name="hashsumTracking">Activate the hashsum tracking</param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashsumTracking = true)
+        public async static Task<bool> ApplyUpdates(this DbContext db, List<string> folders, bool hashSumTracking = true, int timeOut = 60, bool debugOutput = false)
         {
-            Constants.HashSumTracking = hashsumTracking;
+            if (timeOut <= 0)
+                timeOut = 60;
 
-            if(!hashsumTracking)
+            Constants.HashSumTracking = hashSumTracking;
+            Constants.DebugOutput = debugOutput;
+            Constants.SQLTimeout = timeOut;
+
+            if (!hashSumTracking)
                 return await MySqlUpdater.UpdateDB(db, folders);
 
             if (await MySqlUpdater.IsUpdatesTableAvailable(db))
-                    return await MySqlUpdater.UpdateDB(db, folders);
+                return await MySqlUpdater.UpdateDB(db, folders);
             else
             {
-                Console.WriteLine("No updates table detected! Aborting! Please call CreateUpdatesTable() to create the required table or set hashSumTracking = false ");
-                return UpdateStatusCodes.UPDATE_TABLE_MISSING;
+                if (debugOutput)
+                    Console.WriteLine("No updates table detected! Aborting! Please use CreateUpdatesTable() to create the required table or set hashSumTracking = false.");
+                return false;
             }
 
         }
@@ -43,17 +83,30 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="db"></param>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking = true)
+        public async static Task<bool> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking = true, int timeOut = 60, bool debugOutput = false)
         {
-          
+            if (timeOut <= 0)
+                timeOut = 60;
+
+
+            Constants.DebugOutput = debugOutput;
+            Constants.SQLTimeout = timeOut;
+            Constants.HashSumTracking = hashSumTracking;
+
             string ext = Path.GetExtension(filePath);
             if (ext != ".sql")
-                return UpdateStatusCodes.NOT_A_SQL_FILE;
+            {
+                if(debugOutput)
+                    Console.WriteLine($"{filePath} is not an sql file!");
+                return false;
+            }
+                
 
             if (!File.Exists(filePath))
             {
-                Console.WriteLine($"Could not locate file {filePath}!");
-                return UpdateStatusCodes.FILE_NOT_FOUND;
+                if(debugOutput)
+                    Console.WriteLine($"Could not locate file {filePath}!");
+                return false;
             }
 
             try
@@ -62,26 +115,35 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 // Check for emtpy file
                 if (string.IsNullOrWhiteSpace(content))
-                    return UpdateStatusCodes.EMPTY_CONTENT;
-
+                {
+                    if (debugOutput)
+                        Console.WriteLine($"{filePath} has empty content!");
+                    return false;
+                }
+                   
 
                 // Check if hashSumTracking is deactivated
                 if (!hashSumTracking)
                 {
                     await MySqlUpdater.ExecuteQuery(db, content);
-                    return UpdateStatusCodes.SUCCESS;
+                    return true;
                 }
 
 
                 if (!await MySqlUpdater.IsUpdatesTableAvailable(db))
-                    return UpdateStatusCodes.UPDATE_TABLE_MISSING;
+                {
+                    Console.WriteLine("No updates table detected! Aborting! Please use CreateUpdatesTable() to create the required table or set hashSumTracking = false.");
+                    return false;
+                }
 
-                Console.WriteLine($"Applying {Path.GetFileName(filePath)}");
+
+                if(debugOutput)
+                    Console.WriteLine($"Applying {Path.GetFileName(filePath)}");
 
                 TimeSpan ts = await MySqlUpdater.ExecuteQuery(db, content);
 
                 await MySqlUpdater.InsertHash(db, filePath);
-                return UpdateStatusCodes.SUCCESS;
+                return true;
 
 
             }
@@ -96,12 +158,18 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         /// <param name="db"></param>
         /// <returns></returns>
-        public async static Task<bool> CreateUpdatesTable(this DbContext db)
+        public async static Task<bool> CreateUpdatesTable(this DbContext db, int timeOut = 60, bool debugOutput = false)
         {
+            if (timeOut <= 0)
+                timeOut = 60;
+
+
+            Constants.DebugOutput = debugOutput;
+            Constants.SQLTimeout = timeOut;
+
             if (await MySqlUpdater.IsUpdatesTableAvailable(db)) {
-#if DEBUG
-                Console.WriteLine("Updates table already exist!");
-#endif
+                if(debugOutput)
+                    Console.WriteLine("Updates table already exist!");
                 return false;
             }
 
@@ -124,9 +192,9 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
+                    command.CommandTimeout = Constants.SQLTimeout;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                    conn.Close();
                     return true;
                 }
               
@@ -143,31 +211,21 @@ namespace EntityFrameworkCore.MySqlUpdater
                 conn.Close();
             }
         }
-
+        
         /// <summary>
-        /// Applies the provided base file to the database. If the db is already filled with tables, this function will return false
-        /// and will not execute anything.
+        /// Checks if the schema is populated or not.
         /// </summary>
         /// <param name="db"></param>
         /// <param name="schemaName"></param>
-        /// <param name="baseFilePath"></param>
+        /// <param name="debugOutput"></param>
         /// <returns></returns>
-        public async static Task<UpdateStatusCodes> ApplyBaseFile(this DbContext db, string schemaName, string baseFilePath)
+        public async static Task<bool> IsSchemaPopulated(this DbContext db, string schemaName, bool debugOutput = false)
         {
-            if (await MySqlUpdater.GetTableCount(db, schemaName) == 0)
-            {
-                try
-                {
-                    string content = File.ReadAllText(baseFilePath);
-                    await MySqlUpdater.ExecuteQuery(db, content);
-                    return UpdateStatusCodes.SUCCESS;
-                } catch
-                {
-                    throw;
-                }
-            }
-            
-            return UpdateStatusCodes.SCHEMA_NOT_EMPTY;
+            Constants.DebugOutput = debugOutput;
+            return (await MySqlUpdater.GetTableCount(db, schemaName) == 0) ? false : true;
         }
+
+
+        
     }
 }

@@ -33,6 +33,8 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
+                    // TODO: Add option to sepcify command timeout
+                    command.CommandTimeout = 240;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
 
@@ -70,6 +72,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
+                    command.CommandTimeout = Constants.SQLTimeout; ;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -104,6 +107,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
+                    command.CommandTimeout = Constants.SQLTimeout; ;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -134,6 +138,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
+                    command.CommandTimeout = Constants.SQLTimeout; 
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
 
@@ -203,6 +208,8 @@ namespace EntityFrameworkCore.MySqlUpdater
               
                 using (var command = conn.CreateCommand())
                 {
+                   
+                    command.CommandTimeout = Constants.SQLTimeout;
                     command.CommandText = content;
                     await command.ExecuteNonQueryAsync();
                     stopWatch.Stop();

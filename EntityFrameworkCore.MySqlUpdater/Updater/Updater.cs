@@ -16,13 +16,14 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="context"></param>
         /// <param name="folders"></param>
         /// <returns></returns>
-        public static async Task<UpdateStatusCodes> UpdateDB(DbContext context, List<string> folders)
+        public static async Task<bool> UpdateDB(DbContext context, List<string> folders)
         {
             foreach (string folder in folders)
             {
                 if (!Directory.Exists(folder))
                 {
-                    Console.WriteLine($"Directory {folder} can not be found! Skipping folder!");
+                    if(Constants.DebugOutput)
+                        Console.WriteLine($"Directory {folder} can not be found! Skipping folder!");
                     continue;
                 }
 
@@ -39,9 +40,10 @@ namespace EntityFrameworkCore.MySqlUpdater
                         if (!Constants.HashSumTracking)
                         {
                             await ExecuteQuery(context, content);
-#if DEBUG
-                            Console.WriteLine($"Applied {filePath}");
-#endif
+
+                            if (Constants.DebugOutput)
+                                Console.WriteLine($"Applied {filePath}");
+
                             continue;
                         }
 
@@ -53,15 +55,14 @@ namespace EntityFrameworkCore.MySqlUpdater
                                 await ExecuteQuery(context, content);
                                 await UpdateHash(context, filePath, hash);
 
-#if DEBUG
-                                Console.WriteLine($"Applied {filePath}");
-#endif
+                                if (Constants.DebugOutput)
+                                    Console.WriteLine($"Applied {filePath}");
+
                                 break;
 
                             case SHAStatus.EQUALS:
-#if DEBUG
-                                Console.WriteLine($"Hashsum for {filePath} did not change!");
-#endif
+                                if (Constants.DebugOutput)
+                                    Console.WriteLine($"Hashsum for {filePath} did not change!");
                                 continue;
 
                             case SHAStatus.NOT_APPLIED:
@@ -70,9 +71,9 @@ namespace EntityFrameworkCore.MySqlUpdater
                                 await InsertHash(context, filePath, hash);
                                 await UpdateSpeed(context, filePath, ts);
 
-#if DEBUG
-                                Console.WriteLine($"Applied {filePath}");
-#endif
+                                if (Constants.DebugOutput)
+                                    Console.WriteLine($"Applied {filePath}");
+
                                 continue;
 
 
@@ -91,7 +92,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
             }
 
-            return UpdateStatusCodes.SUCCESS;
+            return true;
         }
 
     }

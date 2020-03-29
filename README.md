@@ -15,50 +15,48 @@ Use one of these possibilities to add the package to your project.
 ```paket add EntityFrameworkCore.MySqlUpdater```
 
 
+# Idea
+The idea behind this package is to extend EFCore with an auto updater for mysql databases. It is tedious to apply single sql files one by one, and even if you put them together in one big file you most likely can execute them more than once, because of update queries which will fail. 
+This package introduces convenience functions to apply sql files, keep track of already applied files and executing single sql files.
+This package is not meant to be used for executing sql files that are not in your direct control. So never use it with queries that are vulnerable to sql injection attacks etc.
+
+
+
 
 # Usage
 
-The package is using a database table called updates, to store files applied to your database.
-The updates folder contains information about the date and speed of execution, as well as the filename and the SHA hash.
-
-We will refer to the system as HashSumTracker.
-
+The package is using a database table called updates, to store hashsums of applied files to your database.
+The updates folder contains information about the date and speed of execution, as well as the filename and the SHA hash.  
+We will refer to the system as HashSumTracker.  
 This HashSumTracker is used to prevent multiple executions of already applied sql files. This will cause issue if your sql files, contain update statements.
 
-However, it is possible to deactivate the HashSumTracker. Just use the optional parameter ```hashSumTracking```, available for each function and set it to false.
+-----
+
+## Example
+One intended example workflow can be described as the following.
+A server is setup and at startup one can call the ApplyBaseFile function. This function will check if the schema is already populated. If it is populated it will return without executing the sql file. If the schema is empty ( table count == 0), the sql will be apllied. 
+After the sql base file is applied, one can call ApplyUpdates(List of update folders). The package will iterate through all folders, trying to execute every sql file to your db. It is trying, because if you did not disable hashSumTracking, the tool is checking if the file is not already applied to your database. If the sql file is already applied, it will skip it and continue with the next one.
 
 
-The tool returns some statusCode to let you know if everything checks out or if complications might occur.
+## Available adjustable parameters:
 
-| Name                   	| ID   	| Explanation                                                                	|
-|------------------------	|------	|----------------------------------------------------------------------------	|
-| NO_MATCHING_PATH       	| 0x00 	| Path could not be found                                                    	|
-| NOT_A_SQL_FILE         	| 0x10 	| File is not an sql file                                                    	|
-| INSECURE_SQL_QUERY     	| 0x20 	| SQL is considered insecure                                                 	|
-| EMPTY_CONTENT          	| 0x30 	| Content of sql file is empty                                               	|
-| UPDATE_ALREADY_APPLIED 	| 0x40 	| The file is already applied                                                	|
-| SCHEMA_NOT_EMPTY       	| 0x50 	| The schema which is selected for the base file is not empty                	|
-| UPDATE_TABLE_MISSING   	| 0x60 	| The updates table is missing. This table is required for the HashSumTracking 	|
-| FILE_NOT_FOUND         	| 0x70 	| The file was not found                                                     	|
-
-
+- Timeout: Specifies the mysql command timeout. Default = 60 seconds
+- DebugOutput: Activate/Deactivate the debugoutput. Default = false
+- Hashsumtracking: Activate/Deactivate the hashsum tracking. Default = true 
 
 ## Examples
 
-Create the update table
+Create the update table  
 ```
-// Creates the updates table
 await _context.CreateUpdatesTable().ConfigureAwait(false);
 ```
 
 
 Apply all sql files from given folders.
 ```
-// Applies all sql files from a given folder
-List<string> folders = new List<string> { "PATH_TO_YOUR_FOLDER" };
+List<string> folders = new List<string> { "PATH_TO_YOUR_FOLDER", "PATH_TO_ANOTHER_FOLDER" };
 await _context.ApplyUpdates(folders, true).ConfigureAwait(false);
-
-```
+```  
 
 
 Apply a single file

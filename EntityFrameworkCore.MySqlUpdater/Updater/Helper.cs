@@ -98,10 +98,8 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         private static async Task<SHAStatus> IsUpdateAlreadyApplied(DbContext context, string filePath, string hashsum)
         {
-
-#if DEBUG
-            Console.WriteLine($"FileHash: {hashsum}");
-#endif
+            if(Constants.DebugOutput)
+                Console.WriteLine($"FileHash: {hashsum}");
 
             var conn = context.Database.GetDbConnection();
 
@@ -123,9 +121,8 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                         while (reader.Read())
                         {
-#if DEBUG
-                            Console.WriteLine($"DBHash: {reader.GetValue(0)}");
-#endif
+                            if (Constants.DebugOutput)
+                                Console.WriteLine($"DBHash: {reader.GetValue(0)}");
 
                             if (hashsum.ToUpper() == reader.GetString(0).ToUpper())
                                 return SHAStatus.EQUALS;
