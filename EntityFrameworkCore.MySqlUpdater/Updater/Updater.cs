@@ -16,7 +16,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="context"></param>
         /// <param name="folders"></param>
         /// <returns></returns>
-        public static async Task<UpdateStatusCodes> UpdateDB(DbContext context, List<string> folders)
+        public static async Task<bool> UpdateDB(DbContext context, List<string> folders)
         {
             foreach (string folder in folders)
             {
@@ -92,7 +92,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
             }
 
-            return UpdateStatusCodes.SUCCESS;
+            return true;
         }
 
     }
