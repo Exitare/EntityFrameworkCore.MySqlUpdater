@@ -52,6 +52,9 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public async static Task<UpdateStatusCodes> ApplyUpdates(this DbContext db, List<string> folders, bool hashSumTracking = true, int timeOut = 60, bool debugOutput = false)
         {
+            if (timeOut <= 0)
+                timeOut = 60;
+
             Constants.HashSumTracking = hashSumTracking;
             Constants.DebugOutput = debugOutput;
             Constants.SQLTimeout = timeOut;
@@ -78,6 +81,10 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public async static Task<UpdateStatusCodes> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking = true, int timeOut = 60, bool debugOutput = false)
         {
+            if (timeOut <= 0)
+                timeOut = 60;
+
+
             Constants.DebugOutput = debugOutput;
             Constants.SQLTimeout = timeOut;
             Constants.HashSumTracking = hashSumTracking;
@@ -136,6 +143,10 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <returns></returns>
         public async static Task<bool> CreateUpdatesTable(this DbContext db, int timeOut = 60, bool debugOutput = false)
         {
+            if (timeOut <= 0)
+                timeOut = 60;
+
+
             Constants.DebugOutput = debugOutput;
             Constants.SQLTimeout = timeOut;
 
