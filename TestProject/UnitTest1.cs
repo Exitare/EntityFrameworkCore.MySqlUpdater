@@ -37,7 +37,7 @@ namespace TestProject
 
 
             List<string> folders = new List<string> { "../../../../TestProject/Updates/" };
-            Assert.Equal(UpdateStatusCodes.SUCCESS, await context.ApplyUpdates(folders, true).ConfigureAwait(false));
+            Assert.Equal(.SUCCESS, await context.ApplyUpdates(folders, true).ConfigureAwait(false));
         }
 
 

@@ -117,20 +117,17 @@ namespace EntityFrameworkCore.MySqlUpdater
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
                         if (!reader.HasRows)
-                            return SHAStatus.NOT_APPLIED;
+                            return SHAStatus.NotApplied;
 
                         while (reader.Read())
                         {
                             if (Constants.DebugOutput)
                                 Console.WriteLine($"DBHash: {reader.GetValue(0)}");
 
-                            if (hashsum.ToUpper() == reader.GetString(0).ToUpper())
-                                return SHAStatus.EQUALS;
-
-                            return SHAStatus.CHANGED;
+                            return String.Equals(hashsum, reader.GetString(0), StringComparison.CurrentCultureIgnoreCase) ? SHAStatus.Equals : SHAStatus.Changed;
                         }
 
-                        return SHAStatus.NOT_APPLIED;
+                        return SHAStatus.NotApplied;
                     }
 
                 }

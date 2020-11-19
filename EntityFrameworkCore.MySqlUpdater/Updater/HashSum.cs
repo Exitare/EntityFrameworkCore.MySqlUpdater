@@ -13,7 +13,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        public static string CreateSHA1Hash(string content)
+        private static string CreateSHA1Hash(string content)
         {
             using (SHA1Managed sha1 = new SHA1Managed())
             {

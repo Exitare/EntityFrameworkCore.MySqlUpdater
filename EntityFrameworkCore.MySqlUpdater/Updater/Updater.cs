@@ -51,7 +51,7 @@ namespace EntityFrameworkCore.MySqlUpdater
                         SHAStatus applied = await IsUpdateAlreadyApplied(context, filePath, hash);
                         switch (applied)
                         {
-                            case SHAStatus.CHANGED:
+                            case SHAStatus.Changed:
                                 await ExecuteQuery(context, content);
                                 await UpdateHash(context, filePath, hash);
 
@@ -60,16 +60,15 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                                 break;
 
-                            case SHAStatus.EQUALS:
+                            case SHAStatus.Equals:
                                 if (Constants.DebugOutput)
-                                    Console.WriteLine($"Hashsum for {filePath} did not change!");
+                                    Console.WriteLine($"Hash Sum for {filePath} did not change!");
                                 continue;
 
-                            case SHAStatus.NOT_APPLIED:
+                            case SHAStatus.NotApplied:
 
-                                TimeSpan ts = await ExecuteQuery(context, content);
+                              
                                 await InsertHash(context, filePath, hash);
-                                await UpdateSpeed(context, filePath, ts);
 
                                 if (Constants.DebugOutput)
                                     Console.WriteLine($"Applied {filePath}");

@@ -72,7 +72,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = Constants.SQLTimeout; ;
+                    command.CommandTimeout = (int)Constants.SQLTimeout; ;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -107,7 +107,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = Constants.SQLTimeout; ;
+                    command.CommandTimeout = (int)Constants.SQLTimeout; ;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -138,7 +138,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = Constants.SQLTimeout; 
+                    command.CommandTimeout = (int)Constants.SQLTimeout; 
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
 
