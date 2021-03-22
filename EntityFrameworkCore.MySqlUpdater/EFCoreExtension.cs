@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using EntityFrameworkCore.MySqlUpdater.Service;
@@ -12,15 +13,6 @@ namespace EntityFrameworkCore.MySqlUpdater
 {
     public static class MyDbContext
     {
-
-
-        public static void DebugMode(bool debugMode)
-        {
-           FileService.Class.WriteConfigFile();
-            
-        }
-        
-        
         /// <summary>
         /// Applies the provided base file to the database. If the db is already filled with tables, this function will return false
         /// and will not execute anything.
@@ -28,11 +20,13 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="db"></param>
         /// <param name="schemaName"></param>
         /// <param name="baseFilePath"></param>
+        /// <param name="timeOut"></param>
+        /// <param name="debugOutput"></param>
         /// <returns></returns>
         public  static async Task<bool> ApplyBaseFile(this DbContext db, string schemaName, string baseFilePath, uint timeOut = 60, bool debugOutput = false)
         {
             Constants.DebugOutput = debugOutput;
-            Constants.SQLTimeout = timeOut;
+            Constants.SqlTimeout = timeOut;
 
             if (await MySqlUpdater.GetTableCount(db, schemaName) != 0)
             {
@@ -49,8 +43,9 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 return true;
             }
-            catch
+            catch(Exception ex)
             {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
         }
@@ -60,29 +55,31 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         /// <param name="db"></param>
         /// <param name="folders"></param>
-        /// <param name="createUpdateFolder"></param>
-        /// <param name="hashsumTracking">Activate the hashsum tracking</param>
+        /// <param name="timeOut"></param>
+        /// <param name="hashSumTracking">Activate the hashsum tracking</param>
+        /// <param name="debugOutput"></param>
         /// <returns></returns>
-        public  static async Task<bool> ApplyUpdates(this DbContext db, List<string> folders, bool hashSumTracking = true, uint timeOut = 60, bool debugOutput = false)
+        public static async Task<bool> ApplyUpdates(this DbContext db, List<string> folders,
+            bool hashSumTracking = true, uint timeOut = 60, bool debugOutput = false)
         {
             if (timeOut <= 0)
                 timeOut = 60;
 
             Constants.HashSumTracking = hashSumTracking;
             Constants.DebugOutput = debugOutput;
-            Constants.SQLTimeout = timeOut;
+            Constants.SqlTimeout = timeOut;
 
             if (!hashSumTracking)
-                return await MySqlUpdater.UpdateDB(db, folders);
+                return await MySqlUpdater.UpdateDb(db, folders);
 
             if (await MySqlUpdater.IsUpdatesTableAvailable(db))
-                return await MySqlUpdater.UpdateDB(db, folders);
-            else
-            {
-                if (debugOutput)
-                    Console.WriteLine("No updates table detected! Aborting! Please use CreateUpdatesTable() to create the required table or set hashSumTracking = false.");
-                return false;
-            }
+                return await MySqlUpdater.UpdateDb(db, folders);
+
+            if (debugOutput)
+                Console.WriteLine(
+                    "No updates table detected! Aborting! Please use CreateUpdatesTable() to create the required table or set hashSumTracking = false.");
+            return false;
+
 
         }
 
@@ -91,15 +88,18 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         /// <param name="db"></param>
         /// <param name="filePath"></param>
+        /// <param name="hashSumTracking"></param>
+        /// <param name="timeOut"></param>
+        /// <param name="debugOutput"></param>
         /// <returns></returns>
-        public  static async Task<bool> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking = true, int timeOut = 60, bool debugOutput = false)
+        public  static async Task<bool> ApplySQLFile(this DbContext db, string filePath, bool hashSumTracking = true, uint timeOut = 60, bool debugOutput = false)
         {
             if (timeOut <= 0)
                 timeOut = 60;
 
 
             Constants.DebugOutput = debugOutput;
-            Constants.SQLTimeout = timeOut;
+            Constants.SqlTimeout = timeOut;
             Constants.HashSumTracking = hashSumTracking;
 
             string ext = Path.GetExtension(filePath);
@@ -172,11 +172,11 @@ namespace EntityFrameworkCore.MySqlUpdater
         public  static async Task<bool> CreateUpdatesTable(this DbContext db, uint timeOut = 60, bool debugOutput = false)
         {
             if (timeOut <= 0)
-                timeOut = Constants.SQLTimeout;
+                timeOut = Constants.SqlTimeout;
 
 
             Constants.DebugOutput = debugOutput;
-            Constants.SQLTimeout = timeOut;
+            Constants.SqlTimeout = timeOut;
 
             if (await MySqlUpdater.IsUpdatesTableAvailable(db)) {
                 if(debugOutput)
@@ -202,7 +202,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = (int)Constants.SQLTimeout;
+                    command.CommandTimeout = (int)Constants.SqlTimeout;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     return true;

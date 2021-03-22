@@ -16,76 +16,66 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <param name="context"></param>
         /// <param name="folders"></param>
         /// <returns></returns>
-        public static async Task<bool> UpdateDB(DbContext context, List<string> folders)
+        public static async Task<bool> UpdateDb(DbContext context, List<string> folders)
         {
-            foreach (string folder in folders)
+            foreach (var folder in folders)
             {
                 if (!Directory.Exists(folder))
                 {
-                    if(Constants.DebugOutput)
+                    if (Constants.DebugOutput)
                         Console.WriteLine($"Directory {folder} can not be found! Skipping folder!");
                     continue;
                 }
 
-                foreach (string filePath in Directory.EnumerateFiles(folder, "*.sql").OrderBy(filename => filename))
+                foreach (var filePath in Directory.EnumerateFiles(folder, "*.sql").OrderBy(filename => filename))
                 {
-                    try
-                    {
-                        string content = File.ReadAllText(filePath);
-                        string hash = CreateSHA1Hash(content);
+                    var content = File.ReadAllText(filePath);
+                    var hash = CreateSHA1Hash(content);
 
-                        if (string.IsNullOrEmpty(content))
+                    if (string.IsNullOrEmpty(content))
+                        continue;
+
+                    if (!Constants.HashSumTracking)
+                    {
+                        await ExecuteQuery(context, content);
+
+                        if (Constants.DebugOutput)
+                            Console.WriteLine($"Applied {filePath}");
+
+                        continue;
+                    }
+
+
+                    UpdateStatus applied = await IsUpdateAlreadyApplied(context, filePath, hash);
+                    switch (applied)
+                    {
+                        case UpdateStatus.Changed:
+                            await ExecuteQuery(context, content);
+                            await UpdateHash(context, filePath, hash);
+
+                            if (Constants.DebugOutput)
+                                Console.WriteLine($"Applied {filePath}");
+
+                            break;
+
+                        case UpdateStatus.Equals:
+                            if (Constants.DebugOutput)
+                                Console.WriteLine($"Hash Sum for {filePath} did not change!");
                             continue;
 
-                        if (!Constants.HashSumTracking)
-                        {
+                        case UpdateStatus.NotApplied:
                             await ExecuteQuery(context, content);
+                            await InsertHash(context, filePath, hash);
 
                             if (Constants.DebugOutput)
                                 Console.WriteLine($"Applied {filePath}");
 
                             continue;
-                        }
 
 
-                        SHAStatus applied = await IsUpdateAlreadyApplied(context, filePath, hash);
-                        switch (applied)
-                        {
-                            case SHAStatus.Changed:
-                                await ExecuteQuery(context, content);
-                                await UpdateHash(context, filePath, hash);
-
-                                if (Constants.DebugOutput)
-                                    Console.WriteLine($"Applied {filePath}");
-
-                                break;
-
-                            case SHAStatus.Equals:
-                                if (Constants.DebugOutput)
-                                    Console.WriteLine($"Hash Sum for {filePath} did not change!");
-                                continue;
-
-                            case SHAStatus.NotApplied:
-
-                              
-                                await InsertHash(context, filePath, hash);
-
-                                if (Constants.DebugOutput)
-                                    Console.WriteLine($"Applied {filePath}");
-
-                                continue;
-
-
-                            default:
-                                continue;
-                        }
-
+                        default:
+                            continue;
                     }
-                    catch
-                    {
-                        throw;
-                    }
-
 
                 }
 

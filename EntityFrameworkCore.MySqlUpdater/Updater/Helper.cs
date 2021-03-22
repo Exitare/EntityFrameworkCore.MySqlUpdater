@@ -2,6 +2,7 @@
 using System;
 using System.Data;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace EntityFrameworkCore.MySqlUpdater
@@ -41,8 +42,9 @@ namespace EntityFrameworkCore.MySqlUpdater
                 }
 
             }
-            catch
+            catch(Exception ex)
             {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally
@@ -76,9 +78,9 @@ namespace EntityFrameworkCore.MySqlUpdater
                 }
 
             }
-            catch
+            catch(Exception ex)
             {
-
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
 
@@ -94,12 +96,12 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// </summary>
         /// <param name="context"></param>
         /// <param name="filePath"></param>
-        /// <param name="hashsum"></param>
+        /// <param name="hashSum"></param>
         /// <returns></returns>
-        private static async Task<SHAStatus> IsUpdateAlreadyApplied(DbContext context, string filePath, string hashsum)
+        private static async Task<UpdateStatus> IsUpdateAlreadyApplied(DbContext context, string filePath, string hashSum)
         {
             if(Constants.DebugOutput)
-                Console.WriteLine($"FileHash: {hashsum}");
+                Console.WriteLine($"FileHash: {hashSum}");
 
             var conn = context.Database.GetDbConnection();
 
@@ -117,24 +119,25 @@ namespace EntityFrameworkCore.MySqlUpdater
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
                         if (!reader.HasRows)
-                            return SHAStatus.NotApplied;
+                            return UpdateStatus.NotApplied;
 
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             if (Constants.DebugOutput)
                                 Console.WriteLine($"DBHash: {reader.GetValue(0)}");
 
-                            return String.Equals(hashsum, reader.GetString(0), StringComparison.CurrentCultureIgnoreCase) ? SHAStatus.Equals : SHAStatus.Changed;
+                            return String.Equals(hashSum, reader.GetString(0), StringComparison.CurrentCultureIgnoreCase) ? UpdateStatus.Equals : UpdateStatus.Changed;
                         }
 
-                        return SHAStatus.NotApplied;
+                        return UpdateStatus.NotApplied;
                     }
 
                 }
 
             }
-            catch
+            catch(Exception ex)
             {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally

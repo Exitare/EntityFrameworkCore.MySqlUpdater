@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace EntityFrameworkCore.MySqlUpdater
@@ -17,17 +18,18 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <summary>
         /// Inserts a new update object into the db
         /// <param name="context"></param>
-        /// <param name="name"></param>
+        /// <param name="filePath"></param>
         /// <param name="hash"></param>
         /// </summary>
-        public static async Task InsertHash(DbContext context, string filePath, string hash)
+        private static async Task InsertHash(DbContext context, string filePath, string hash)
         {
             var filename = Path.GetFileName(filePath);
             var conn = context.Database.GetDbConnection();
             try
             {
 
-                string query = $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES('{filename}','{hash}','RELEASED', '{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}',0);";
+                string query =
+                    $@"INSERT INTO updates (name, hash, state, timestamp, speed) VALUES('{filename}','{hash}','RELEASED', '{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}',0);";
 
                 await conn.OpenAsync();
 
@@ -40,8 +42,9 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally
@@ -54,8 +57,7 @@ namespace EntityFrameworkCore.MySqlUpdater
         /// <summary>
         /// Inserts a new update object into the db
         /// <param name="context"></param>
-        /// <param name="name"></param>
-        /// <param name="hash"></param>
+        /// <param name="filePath"></param>
         /// </summary>
         public static async Task InsertHash(DbContext context, string filePath)
         {
@@ -72,13 +74,14 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = (int)Constants.SQLTimeout; ;
+                    command.CommandTimeout = (int)Constants.SqlTimeout; ;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally
@@ -107,7 +110,7 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = (int)Constants.SQLTimeout; ;
+                    command.CommandTimeout = (int)Constants.SqlTimeout; ;
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -115,9 +118,9 @@ namespace EntityFrameworkCore.MySqlUpdater
                 return true;
 
             }
-            catch
+            catch(Exception ex)
             {
-
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally
@@ -138,14 +141,15 @@ namespace EntityFrameworkCore.MySqlUpdater
 
                 using (var command = conn.CreateCommand())
                 {
-                    command.CommandTimeout = (int)Constants.SQLTimeout; 
+                    command.CommandTimeout = (int)Constants.SqlTimeout; 
                     command.CommandText = query;
                     await command.ExecuteNonQueryAsync();
 
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally
@@ -209,7 +213,7 @@ namespace EntityFrameworkCore.MySqlUpdater
                 using (var command = conn.CreateCommand())
                 {
                    
-                    command.CommandTimeout = Constants.SQLTimeout;
+                    command.CommandTimeout = (int)Constants.SqlTimeout;
                     command.CommandText = content;
                     await command.ExecuteNonQueryAsync();
                     stopWatch.Stop();
@@ -217,9 +221,9 @@ namespace EntityFrameworkCore.MySqlUpdater
                     return ts;
                 }
             }
-            catch
+            catch(Exception ex)
             {
-
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
             finally

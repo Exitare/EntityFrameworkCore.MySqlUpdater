@@ -4,17 +4,24 @@ using System.Text;
 
 namespace EntityFrameworkCore.MySqlUpdater
 {
-    public enum SHAStatus: uint
+    public enum UpdateStatus: uint
     {
         NotApplied = 0,
         Equals,
         Changed,
     }
 
-    public class Constants
+    public enum Mode : uint
+    {
+        FileHashSum,
+        FileName,
+    }
+
+    public static class Constants
     {
         public static bool HashSumTracking = true;
-        public static uint SQLTimeout = 60;
+        public static uint SqlTimeout = 60;
         public static bool DebugOutput = false;
     }
+    
 }
