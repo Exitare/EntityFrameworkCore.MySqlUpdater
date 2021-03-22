@@ -5,6 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using EntityFrameworkCore.MySqlUpdater;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using FluentAssertions;
 
 namespace TestProject
 {
@@ -14,14 +17,17 @@ namespace TestProject
         public async Task ApplyBaseFile()
         {
             var options = new DbContextOptionsBuilder<TestContext>()
-               .UseMySql("server=127.0.0.1;port=3306;database=test;uid=trinity;pwd=trinity20")
+               .UseMySql("server=127.0.0.1;port=3306;database=test;uid=test;pwd=test")
                .Options;
 
             var context = new TestContext(options);
-
-
-     
-            await context.ApplyBaseFile("test", "../../../../TestProject/Base/world_database_05.sql");
+            
+            var codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+            var codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
+            var dirPath = Path.GetDirectoryName(codeBasePath);
+            var path = Path.Combine(dirPath, "../../../SQL/Base/");
+            var result = await context.ApplyBaseFile("accounts", path);
+            result.Should().BeTrue();
         }
 
 
@@ -30,14 +36,15 @@ namespace TestProject
         {
 
             var options = new DbContextOptionsBuilder<TestContext>()
-             .UseMySql("server=127.0.0.1;port=3306;database=test;uid=trinity;pwd=trinity20")
+             .UseMySql("server=127.0.0.1;port=3306;database=test;uid=test;pwd=test")
              .Options;
 
             var context = new TestContext(options);
 
 
-            List<string> folders = new List<string> { "../../../../TestProject/Updates/" };
-            Assert.Equal(.SUCCESS, await context.ApplyUpdates(folders, true).ConfigureAwait(false));
+            List<string> folders = new List<string> { "./SQL/Updates/Account" };
+            var result = await context.ApplyUpdates(folders, true).ConfigureAwait(false);
+            result.Should().BeTrue();
         }
 
 
@@ -46,14 +53,15 @@ namespace TestProject
         {
 
             var options = new DbContextOptionsBuilder<TestContext>()
-             .UseMySql("server=127.0.0.1;port=3306;database=test;uid=trinity;pwd=trinity20")
+             .UseMySql("server=127.0.0.1;port=3306;database=test;uid=test;pwd=test")
              .Options;
 
             var context = new TestContext(options);
 
 
-            Assert.True(await context.IsSchemaPopulated("test"));
-            
+            var result = await context.IsSchemaPopulated("test");
+            result.Should().BeTrue();
+
         }
 
         [Fact]

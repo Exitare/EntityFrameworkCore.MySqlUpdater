@@ -45,7 +45,6 @@ namespace EntityFrameworkCore.MySqlUpdater
             }
             catch(Exception ex)
             {
-                ExceptionDispatchInfo.Capture(ex.InnerException).Throw(); 
                 throw;
             }
         }
